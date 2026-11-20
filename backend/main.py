@@ -40,22 +40,6 @@ app.add_middleware(
 # Include API routes
 app.include_router(router)
 
-@app.on_event("startup")
-def prewarm_indices_in_background():
-    """Warms up the HybridRetriever and vector index in a background thread so server starts instantly."""
-    import threading
-    def _warmup():
-        try:
-            logger.info("Background thread: Warming up HybridRetriever and embedding indices...")
-            from backend.api.routes import get_chat_service
-            service = get_chat_service()
-            _ = service.retriever
-            logger.info("Background thread: HybridRetriever and FAISS are warm and ready!")
-        except Exception as e:
-            logger.warning(f"Background warmup encountered non-critical error: {e}")
-
-    threading.Thread(target=_warmup, daemon=True).start()
-
 # Mount frontend build static directory if available
 FRONTEND_DIST_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 

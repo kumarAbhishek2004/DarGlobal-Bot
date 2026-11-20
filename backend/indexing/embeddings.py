@@ -15,9 +15,16 @@ class EmbeddingEngine:
 
     def _load_model(self):
         try:
-            logger.info(f"Attempting to import sentence_transformers...")
+            # Optimize PyTorch for single-threaded CPU cloud environments (Render, HuggingFace)
+            try:
+                import torch
+                torch.set_num_threads(1)
+                torch.set_num_interop_threads(1)
+            except Exception:
+                pass
+
+            logger.info(f"Loading SentenceTransformer: {self.model_name}...")
             from sentence_transformers import SentenceTransformer
-            logger.info(f"Loading SentenceTransformer: {self.model_name} (this may download weights on first run)...")
             self.model = SentenceTransformer(self.model_name)
             logger.info("SentenceTransformer loaded successfully!")
         except Exception as e:
