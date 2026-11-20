@@ -14,22 +14,44 @@ class ChatService:
 
     def __init__(self, data_dir: Path, openrouter_key: Optional[str] = None):
         self.data_dir = Path(data_dir)
-        self.retriever = HybridRetriever(self.data_dir)
+        self._retriever = None
         self.llm_client = OpenRouterClient(api_key=openrouter_key)
+
+    @property
+    def retriever(self) -> HybridRetriever:
+        """Lazy-loads the hybrid retriever and embeddings model on demand."""
+        if self._retriever is None:
+            logger.info("Initializing HybridRetriever and vector indices...")
+            self._retriever = HybridRetriever(self.data_dir)
+            logger.info("HybridRetriever initialized successfully.")
+        return self._retriever
 
     def _is_greeting(self, query: str) -> bool:
         """Detects conversational pleasantries and greetings to provide instant concierge response."""
         clean = re.sub(r"[^\w\s]", "", query).strip().lower()
+        if not clean:
+            return True
+
         pure_greetings = {
             "hi", "hii", "hiii", "hello", "helloo", "hey", "heyy", "greetings",
-            "good morning", "good afternoon", "good evening", "howdy",
-            "who are you", "what are you", "what can you do", "help", "start", "menu"
+            "good morning", "good afternoon", "good evening", "howdy", "sup", "yo",
+            "who are you", "what are you", "what can you do", "help", "start", "menu",
+            "test", "ping"
         }
         if clean in pure_greetings:
             return True
-        words = clean.split()
-        if len(words) <= 2 and words[0] in {"hi", "hii", "hello", "hey", "greetings"}:
+
+        greeting_starters = ("hi ", "hii ", "hello ", "hey ", "greetings ", "good morning", "good afternoon", "good evening")
+        if any(clean.startswith(prefix) for prefix in greeting_starters) and len(clean.split()) <= 4:
             return True
+
+        conversational_short = {
+            "hi there", "hello there", "hey there", "how are you", "how are you doing",
+            "can you help me", "who created you", "who made you"
+        }
+        if clean in conversational_short:
+            return True
+
         return False
 
     def answer_query(self, user_query: str, top_k: int = 4) -> Dict[str, Any]:

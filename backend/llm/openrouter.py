@@ -12,9 +12,9 @@ OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 FALLBACK_OPENROUTER_MODELS = [
     os.getenv("OPENROUTER_MODEL", "baidu/ernie-5.5-flash-preview:free"),
     "baidu/ernie-5.5-flash-preview:free",
-    "openrouter/free",
-    "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "liquid/lfm-3-1.7b:free"
+    "meta-llama/llama-3.2-3b-instruct:free",
+    "liquid/lfm-3-1.7b:free",
+    "openrouter/free"
 ]
 
 class OpenRouterClient:
@@ -65,7 +65,7 @@ class OpenRouterClient:
                     headers=headers,
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=8) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
                     choices = data.get("choices", [])
                     if not choices:
