@@ -38,125 +38,192 @@
     .chat-prose blockquote { border-left: 3px solid #D4AF37; padding-left: 0.75rem; color: #a1a1aa; margin: 0.5rem 0; }
   </style>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col bg-[#212121]">
+<body class="h-screen w-screen overflow-hidden flex bg-[#212121]">
 
-  <!-- Minimal Header -->
-  <header class="h-14 flex items-center justify-between px-5 border-b border-[#2d2d2d] bg-[#212121]/95 shrink-0 z-20">
-    <div class="flex items-center gap-2.5">
-      <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shadow-sm">
-        D
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm hidden"></div>
+
+  <!-- Collapsible ChatGPT-style Sidebar -->
+  <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-[#171717] border-r border-[#2a2a2a] flex flex-col transition-all duration-300 ease-in-out shrink-0">
+    <!-- Top Header -->
+    <div class="h-14 flex items-center justify-between px-4 border-b border-[#262626]">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-[11px] shadow-sm">
+          D
+        </div>
+        <span class="font-semibold text-xs tracking-wider uppercase text-gray-300">
+          Conversations
+        </span>
       </div>
-      <span class="font-semibold text-sm text-white tracking-wide">DarGlobal AI</span>
+
+      <button
+        onclick="toggleSidebar()"
+        class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#262626] transition"
+        title="Close sidebar"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+      </button>
     </div>
 
     <!-- New Chat Button -->
-    <button
-      onclick="startNewChat()"
-      class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white bg-[#2f2f2f] hover:bg-[#383838] border border-[#3d3d3d] transition shadow-sm"
-      title="Start new conversation"
-    >
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-      <span>New chat</span>
-    </button>
-  </header>
+    <div class="p-3">
+      <button
+        onclick="startNewChat()"
+        class="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-black bg-gradient-to-r from-[#D4AF37] to-[#C59B27] hover:from-[#E5BF45] hover:to-[#D4AF37] transition shadow-md shadow-[#D4AF37]/10"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        <span>New chat</span>
+      </button>
+    </div>
 
-  <!-- Central Chat Area -->
-  <main class="flex-1 overflow-hidden flex flex-col relative">
-    
-    <!-- Messages Scrollbox -->
-    <div id="scrollContainer" class="flex-1 overflow-y-auto px-4">
-      <div id="chatContent" class="max-w-2xl mx-auto w-full py-8">
-
-        <!-- Clean Empty State (ChatGPT-Style) -->
-        <div id="emptyHero" class="min-h-[60vh] flex flex-col items-center justify-center text-center">
-          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-base mb-4 shadow-md">
-            D
-          </div>
-          <h2 class="text-2xl font-semibold text-white mb-2">
-            What real estate property are you looking for?
-          </h2>
-          <p class="text-xs text-gray-400 mb-8 max-w-md">
-            Ask questions about luxury branded residences (Pagani, Lamborghini, Trump) and verified Saudi listings on Wasalt.
-          </p>
-
-          <!-- 4 Clean Starter Prompts -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
-            <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
-              <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">Pagani Tower in Dubai</span>
-              <p class="text-xs text-gray-400 line-clamp-1">Tell me about DaVinci Tower by Pagani in Dubai. What are the amenities and price?</p>
-            </button>
-
-            <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
-              <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">Lamborghini Villas Spain</span>
-              <p class="text-xs text-gray-400 line-clamp-1">What luxury villas does DarGlobal have in Spain? Describe Tierra Viva.</p>
-            </button>
-
-            <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
-              <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">AIDA Oman Resort</span>
-              <p class="text-xs text-gray-400 line-clamp-1">What is the AIDA project in Oman? Tell me about the Trump International resort.</p>
-            </button>
-
-            <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
-              <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">Riyadh Listings on Wasalt</span>
-              <p class="text-xs text-gray-400 line-clamp-1">What 3-bedroom residential properties are available for sale in Riyadh on Wasalt?</p>
-            </button>
-          </div>
-        </div>
-
-        <!-- Chat Messages -->
-        <div id="messagesList" class="space-y-6"></div>
-
-        <!-- Typing Indicator -->
-        <div id="typingIndicator" class="hidden flex gap-4 items-start py-4">
-          <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shrink-0 mt-0.5 shadow-sm animate-pulse">
-            D
-          </div>
-          <div class="flex-1 bg-[#262626] border border-[#333333] rounded-2xl px-4 py-3 max-w-md shadow-sm">
-            <div class="flex items-center gap-2 mb-1.5">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce"></span>
-                <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.2s]"></span>
-                <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.4s]"></span>
-              </div>
-              <span class="text-xs font-medium text-gray-200">
-                Searching portfolio & consulting AI advisor...
-              </span>
-            </div>
-            <div class="text-[11px] text-amber-400/90 flex items-center gap-1.5 mt-1">
-              <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-              <span>First response may take a moment while the cloud server wakes up.</span>
-            </div>
-          </div>
-        </div>
-
+    <!-- Recent Chats Section -->
+    <div class="flex-1 overflow-y-auto px-2 py-1 space-y-1">
+      <div class="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+        Recent Chats
+      </div>
+      <div id="threadList" class="space-y-1">
+        <!-- Rendered via JS -->
       </div>
     </div>
+  </aside>
 
-    <!-- Floating Capsule Input (ChatGPT style) -->
-    <div class="w-full max-w-2xl mx-auto px-4 pb-4 pt-1 shrink-0">
-      <form id="chatForm" onsubmit="handleFormSubmit(event)" class="relative flex items-center bg-[#2f2f2f] rounded-3xl border border-[#3d3d3d] focus-within:border-gray-400 shadow-md transition">
-        <textarea
-          id="queryInput"
-          rows="1"
-          placeholder="Message DarGlobal AI Advisor..."
-          onkeydown="handleKeyDown(event)"
-          class="w-full bg-transparent text-white placeholder-gray-400 text-sm py-3.5 pl-5 pr-14 focus:outline-none resize-none max-h-36"
-        ></textarea>
+  <!-- Central Chat Area -->
+  <div class="flex-1 flex flex-col overflow-hidden relative">
+
+    <!-- Minimal Header -->
+    <header class="h-14 flex items-center justify-between px-4 border-b border-[#2d2d2d] bg-[#212121]/95 shrink-0 z-20">
+      <div class="flex items-center gap-3">
+        <!-- Sidebar Toggle Button -->
         <button
-          type="submit"
-          id="sendBtn"
-          class="absolute right-2.5 w-8 h-8 rounded-full bg-white text-black hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center transition disabled:cursor-not-allowed shadow"
+          onclick="toggleSidebar()"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-[#2f2f2f] transition"
+          title="Toggle sidebar"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
         </button>
-      </form>
-    </div>
 
-  </main>
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shadow-sm">
+            D
+          </div>
+          <div>
+            <span class="font-semibold text-sm text-white tracking-wide">DarGlobal AI</span>
+            <span id="headerThreadTitle" class="text-xs text-gray-400 ml-2 hidden sm:inline truncate max-w-xs">• New chat</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Chat Top Action -->
+      <button
+        onclick="startNewChat()"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white bg-[#2f2f2f] hover:bg-[#383838] border border-[#3d3d3d] transition shadow-sm"
+        title="Start new conversation"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>New chat</span>
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden flex flex-col relative">
+      <!-- Messages Scrollbox -->
+      <div id="scrollContainer" class="flex-1 overflow-y-auto px-4">
+        <div id="chatContent" class="max-w-2xl mx-auto w-full py-8">
+
+          <!-- Clean Empty State (ChatGPT-Style) -->
+          <div id="emptyHero" class="min-h-[60vh] flex flex-col items-center justify-center text-center">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-base mb-4 shadow-md">
+              D
+            </div>
+            <h2 class="text-2xl font-semibold text-white mb-2">
+              What real estate property are you looking for?
+            </h2>
+            <p class="text-xs text-gray-400 mb-8 max-w-md">
+              Ask questions about luxury branded residences (Pagani, Lamborghini, Trump) and verified Saudi listings on Wasalt.
+            </p>
+
+            <!-- 4 Clean Starter Prompts -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left">
+              <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
+                <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">Pagani Tower in Dubai</span>
+                <p class="text-xs text-gray-400 line-clamp-1">Tell me about DaVinci Tower by Pagani in Dubai. What are the amenities and price?</p>
+              </button>
+
+              <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
+                <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">Lamborghini Villas Spain</span>
+                <p class="text-xs text-gray-400 line-clamp-1">What luxury villas does DarGlobal have in Spain? Describe Tierra Viva.</p>
+              </button>
+
+              <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
+                <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">AIDA Oman Resort</span>
+                <p class="text-xs text-gray-400 line-clamp-1">What is the AIDA project in Oman? Tell me about the Trump International resort.</p>
+              </button>
+
+              <button onclick="handleAsk(this.querySelector('p').innerText)" class="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2f2f2f] border border-[#333333] hover:border-gray-500 transition group">
+                <span class="text-xs font-medium text-gray-200 group-hover:text-white block mb-0.5">Riyadh Listings on Wasalt</span>
+                <p class="text-xs text-gray-400 line-clamp-1">What 3-bedroom residential properties are available for sale in Riyadh on Wasalt?</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Messages -->
+          <div id="messagesList" class="space-y-6"></div>
+
+          <!-- Typing Indicator -->
+          <div id="typingIndicator" class="hidden flex gap-4 items-start py-4">
+            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shrink-0 mt-0.5 shadow-sm animate-pulse">
+              D
+            </div>
+            <div class="flex-1 bg-[#262626] border border-[#333333] rounded-2xl px-4 py-3 max-w-md shadow-sm">
+              <div class="flex items-center gap-2 mb-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce"></span>
+                  <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.2s]"></span>
+                  <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.4s]"></span>
+                </div>
+                <span class="text-xs font-medium text-gray-200">
+                  Searching portfolio & consulting AI advisor...
+                </span>
+              </div>
+              <div class="text-[11px] text-amber-400/90 flex items-center gap-1.5 mt-1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                <span>First response may take a moment while the cloud server wakes up.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Floating Capsule Input (ChatGPT style) -->
+      <div class="w-full max-w-2xl mx-auto px-4 pb-4 pt-1 shrink-0">
+        <form id="chatForm" onsubmit="handleFormSubmit(event)" class="relative flex items-center bg-[#2f2f2f] rounded-3xl border border-[#3d3d3d] focus-within:border-gray-400 shadow-md transition">
+          <textarea
+            id="queryInput"
+            rows="1"
+            placeholder="Message DarGlobal AI Advisor..."
+            onkeydown="handleKeyDown(event)"
+            class="w-full bg-transparent text-white placeholder-gray-400 text-sm py-3.5 pl-5 pr-14 focus:outline-none resize-none max-h-36"
+          ></textarea>
+          <button
+            type="submit"
+            id="sendBtn"
+            class="absolute right-2.5 w-8 h-8 rounded-full bg-white text-black hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-white flex items-center justify-center transition disabled:cursor-not-allowed shadow"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          </button>
+        </form>
+      </div>
+    </main>
+
+  </div>
 
   <script>
     let isWaiting = false;
+    let currentThreadId = null;
     let conversationHistory = [];
+    let threads = [];
+    let isSidebarOpen = true;
 
     const scrollContainer = document.getElementById('scrollContainer');
     const emptyHero = document.getElementById('emptyHero');
@@ -164,13 +231,140 @@
     const queryInput = document.getElementById('queryInput');
     const sendBtn = document.getElementById('sendBtn');
     const typingIndicator = document.getElementById('typingIndicator');
+    const threadListEl = document.getElementById('threadList');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const headerThreadTitle = document.getElementById('headerThreadTitle');
+
+    // On Load: Fetch all saved threads
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchThreads();
+    });
+
+    function toggleSidebar() {
+      isSidebarOpen = !isSidebarOpen;
+      if (isSidebarOpen) {
+        sidebar.classList.remove('-translate-x-full', 'md:w-0', 'md:opacity-0', 'md:pointer-events-none');
+        sidebarBackdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full', 'md:w-0', 'md:opacity-0', 'md:pointer-events-none');
+        sidebarBackdrop.classList.add('hidden');
+      }
+    }
+
+    async function fetchThreads() {
+      try {
+        const res = await fetch('/api/threads');
+        if (res.ok) {
+          threads = await res.json();
+          renderThreadList();
+        }
+      } catch (err) {
+        console.error('Failed to load threads:', err);
+      }
+    }
+
+    function renderThreadList() {
+      if (!threadListEl) return;
+      if (threads.length === 0) {
+        threadListEl.innerHTML = `
+          <div class="px-3 py-6 text-center text-xs text-gray-500">
+            <span>No past conversations yet.<br>Start a new chat!</span>
+          </div>
+        `;
+        return;
+      }
+
+      threadListEl.innerHTML = threads.map(t => {
+        const isActive = t.id === currentThreadId;
+        return `
+          <div
+            onclick="selectThread('${t.id}')"
+            class="group relative flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer text-xs transition select-none ${
+              isActive
+                ? 'bg-[#262626] text-white font-medium shadow-sm border border-[#333333]'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-[#212121]'
+            }"
+          >
+            <svg class="w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#D4AF37]' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <span class="truncate flex-1 pr-5" title="${escapeHtml(t.title || 'Conversation')}">${escapeHtml(t.title || 'Conversation')}</span>
+            <button
+              onclick="deleteThread('${t.id}', event)"
+              class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-gray-500 transition rounded"
+              title="Delete conversation"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function selectThread(threadId) {
+      if (threadId === currentThreadId) return;
+      try {
+        const res = await fetch(`/api/threads/${threadId}`);
+        if (!res.ok) return;
+        const thread = await res.json();
+        currentThreadId = thread.id;
+        conversationHistory = [];
+        messagesList.innerHTML = '';
+        if (emptyHero) emptyHero.style.display = 'none';
+
+        if (headerThreadTitle) {
+          headerThreadTitle.textContent = `• ${thread.title || 'Conversation'}`;
+        }
+
+        renderThreadList();
+
+        if (thread.messages && thread.messages.length > 0) {
+          thread.messages.forEach(m => {
+            conversationHistory.push({ role: m.role, content: m.content });
+            if (m.role === 'user') {
+              appendUserMessage(m.content);
+            } else {
+              appendAssistantMessage({
+                answer: m.content,
+                sources: m.sources || [],
+                model: m.model
+              });
+            }
+          });
+        }
+        scrollToBottom();
+      } catch (err) {
+        console.error('Failed to load thread:', err);
+      }
+    }
+
+    async function deleteThread(threadId, event) {
+      if (event) event.stopPropagation();
+      try {
+        const res = await fetch(`/api/threads/${threadId}`, { method: 'DELETE' });
+        if (res.ok) {
+          threads = threads.filter(t => t.id !== threadId);
+          if (currentThreadId === threadId) {
+            startNewChat();
+          } else {
+            renderThreadList();
+          }
+        }
+      } catch (err) {
+        console.error('Failed to delete thread:', err);
+      }
+    }
 
     function startNewChat() {
+      currentThreadId = null;
       conversationHistory = [];
       messagesList.innerHTML = '';
       if (emptyHero) emptyHero.style.display = 'flex';
+      if (headerThreadTitle) headerThreadTitle.textContent = '• New chat';
       queryInput.value = '';
       queryInput.focus();
+      renderThreadList();
     }
 
     function handleKeyDown(e) {
@@ -212,11 +406,19 @@
           body: JSON.stringify({
             query: query,
             top_k: 4,
+            thread_id: currentThreadId,
             history: conversationHistory.slice(-6)
           })
         });
 
         const data = await resp.json();
+        if (data.thread_id) {
+          const isNew = !currentThreadId;
+          currentThreadId = data.thread_id;
+          if (isNew) {
+            fetchThreads(); // Refresh thread list to display new thread title
+          }
+        }
         typingIndicator.classList.add('hidden');
         if (data.answer) {
           conversationHistory.push({ role: 'assistant', content: data.answer });

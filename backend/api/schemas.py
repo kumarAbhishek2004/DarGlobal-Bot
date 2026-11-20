@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 
 class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, description="User question or real estate search query")
     top_k: Optional[int] = Field(default=4, ge=1, le=10, description="Number of top retrieved sources to return")
+    thread_id: Optional[str] = Field(default=None, description="Optional thread/conversation ID for database persistence")
     history: Optional[List[Dict[str, Any]]] = Field(default=[], description="Previous conversation turns for context memory")
     session_id: Optional[str] = Field(default=None, description="Optional session identifier")
 
@@ -26,6 +27,23 @@ class ChatResponse(BaseModel):
     model: str
     sources: List[SourceItem]
     latency_ms: float
+    thread_id: Optional[str] = None
+
+class ThreadItem(BaseModel):
+    id: str
+    title: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+class CreateThreadRequest(BaseModel):
+    title: Optional[str] = "New Conversation"
+
+class ThreadDetailResponse(BaseModel):
+    id: str
+    title: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    messages: List[Dict[str, Any]] = []
 
 class HealthResponse(BaseModel):
     status: str
