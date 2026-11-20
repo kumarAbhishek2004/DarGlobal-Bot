@@ -58,7 +58,7 @@ def health_check():
 def handle_chat(req: ChatRequest):
     try:
         service = get_chat_service()
-        result = service.answer_query(req.query, top_k=req.top_k)
+        result = service.answer_query(req.query, top_k=req.top_k, history=req.history)
         return ChatResponse(**result)
     except Exception as e:
         logger.error(f"Chat execution failed: {e}", exc_info=True)

@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
 import { sendChatMessage } from './services/api';
 
+const STORAGE_KEY = 'darglobal_chat_messages_v1';
+
 export default function App() {
-  const [messages, setMessages] = useState([]);
+  // Restore conversational context from localStorage if available
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Persist conversation context on changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch (e) {
+      console.warn('Failed to persist conversation context:', e);
+    }
+  }, [messages]);
 
   const handleNewChat = () => {
     setMessages([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {}
   };
 
   const handleSendMessage = async (text) => {
@@ -17,7 +39,13 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const data = await sendChatMessage(text, { top_k: 4 });
+      // Pass the last 6 turns as conversation history for smooth context retention
+      const historyPayload = messages.slice(-6).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const data = await sendChatMessage(text, { top_k: 4, history: historyPayload });
 
       const assistantMessage = {
         role: 'assistant',
@@ -32,7 +60,7 @@ export default function App() {
       console.error('Chat error:', err);
       const errorMessage = {
         role: 'assistant',
-        content: `**Error:** Unable to connect to server. ${err.message}`,
+        content: `Unable to connect to server. ${err.message}`,
         sources: [],
       };
       setMessages((prev) => [...prev, errorMessage]);

@@ -2,7 +2,7 @@ import time
 import re
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from backend.retrieval.hybrid import HybridRetriever
 from backend.llm.openrouter import OpenRouterClient
 from backend.llm.prompts import SYSTEM_PROMPT, build_rag_prompt
@@ -55,13 +55,13 @@ class ChatService:
 
         return False
 
-    def answer_query(self, user_query: str, top_k: int = 4) -> Dict[str, Any]:
-        """Processes user question through Hybrid Retrieval, Reranking, and LLM Generation with auto-fallback."""
+    def answer_query(self, user_query: str, top_k: int = 4, history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+        """Processes user question through Hybrid Retrieval, Reranking, and LLM Generation with multi-turn context memory."""
         start_time = time.time()
-        logger.info(f"Processing query: '{user_query}'")
+        logger.info(f"Processing query: '{user_query}' (history turns: {len(history) if history else 0})")
 
-        # Instant 0ms response for greetings and introductions
-        if self._is_greeting(user_query):
+        # Instant 0ms response for greetings (only on initial turn)
+        if self._is_greeting(user_query) and not history:
             latency = round((time.time() - start_time) * 1000, 2)
             return {
                 "query": user_query,
@@ -80,16 +80,47 @@ class ChatService:
                 "latency_ms": latency
             }
 
-        # 1. Retrieve & Rerank Context Documents
-        retrieved_docs = self.retriever.retrieve(user_query, top_k=top_k)
+        # Context-aware query expansion for follow-up questions (e.g. "what is its price?", "where is it located?")
+        search_query = user_query
+        if history:
+            prev_user_queries = [
+                str(h.get("content", "")) for h in history 
+                if h.get("role") == "user" and h.get("content")
+            ]
+            if prev_user_queries:
+                last_user_query = prev_user_queries[-1]
+                pronouns = {"it", "its", "this", "that", "these", "those", "they", "them", "there", "here", "the project", "the villa"}
+                words = set(re.findall(r"\b\w+\b", user_query.lower()))
+                # If current query contains pronouns or is a brief follow-up (<= 6 words), enrich with last subject
+                if (words & pronouns) or len(user_query.split()) <= 6:
+                    search_query = f"{user_query} {last_user_query}"
+                    logger.info(f"Enriched search query with context: '{search_query}'")
 
-        # 2. Build Grounded Prompt
+        # 1. Retrieve & Rerank Context Documents
+        retrieved_docs = self.retriever.retrieve(search_query, top_k=top_k)
+
+        # 2. Build Grounded User Prompt
         user_prompt = build_rag_prompt(user_query, retrieved_docs)
 
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt}
-        ]
+        # 3. Construct Multi-Turn Message History for LLM
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+        # Inject up to last 4 conversation turns for context continuity
+        if history:
+            for turn in history[-4:]:
+                role = str(turn.get("role", "user")).lower()
+                content = str(turn.get("content", "")).strip()
+                if role in ("user", "assistant") and content:
+                    messages.append({
+                        "role": role,
+                        "content": content[:600] # keep recent turns concise for token budget
+                    })
+
+        # Append current grounded user query
+        messages.append({
+            "role": "user",
+            "content": user_prompt
+        })
 
         # 3. Generate Answer with OpenRouter (with automatic model fallback)
         llm_res = self.llm_client.generate(messages)

@@ -156,6 +156,7 @@
 
   <script>
     let isWaiting = false;
+    let conversationHistory = [];
 
     const scrollContainer = document.getElementById('scrollContainer');
     const emptyHero = document.getElementById('emptyHero');
@@ -165,6 +166,7 @@
     const typingIndicator = document.getElementById('typingIndicator');
 
     function startNewChat() {
+      conversationHistory = [];
       messagesList.innerHTML = '';
       if (emptyHero) emptyHero.style.display = 'flex';
       queryInput.value = '';
@@ -192,6 +194,9 @@
 
       if (emptyHero) emptyHero.style.display = 'none';
 
+      // Record in conversational context memory
+      conversationHistory.push({ role: 'user', content: query });
+
       // 1. Append User Message
       appendUserMessage(query);
 
@@ -206,12 +211,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: query,
-            top_k: 4
+            top_k: 4,
+            history: conversationHistory.slice(-6)
           })
         });
 
         const data = await resp.json();
         typingIndicator.classList.add('hidden');
+        if (data.answer) {
+          conversationHistory.push({ role: 'assistant', content: data.answer });
+        }
         appendAssistantMessage(data);
       } catch (err) {
         typingIndicator.classList.add('hidden');

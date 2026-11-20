@@ -4,6 +4,8 @@ from typing import List, Optional, Any
 class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, description="User question or real estate search query")
     top_k: Optional[int] = Field(default=4, ge=1, le=10, description="Number of top retrieved sources to return")
+    history: Optional[List[Dict[str, Any]]] = Field(default=[], description="Previous conversation turns for context memory")
+    session_id: Optional[str] = Field(default=None, description="Optional session identifier")
 
 class SourceItem(BaseModel):
     title: Optional[Any] = None
