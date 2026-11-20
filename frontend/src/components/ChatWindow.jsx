@@ -23,6 +23,7 @@ const SUGGESTIONS = [
 
 export default function ChatWindow({ messages, isLoading, onSendMessage }) {
   const [input, setInput] = useState('');
+  const [loadingTime, setLoadingTime] = useState(0);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -32,6 +33,20 @@ export default function ChatWindow({ messages, isLoading, onSendMessage }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Loading duration timer to give dynamic concierge status feedback
+  useEffect(() => {
+    let timer;
+    if (isLoading) {
+      setLoadingTime(0);
+      timer = setInterval(() => {
+        setLoadingTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setLoadingTime(0);
+    }
+    return () => clearInterval(timer);
+  }, [isLoading]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -83,13 +98,26 @@ export default function ChatWindow({ messages, isLoading, onSendMessage }) {
               ))}
               {isLoading && (
                 <div className="flex gap-4 items-start py-4">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shrink-0 mt-0.5 shadow-sm animate-pulse">
                     D
                   </div>
-                  <div className="flex items-center gap-1.5 pt-1.5">
-                    <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></span>
-                    <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:0.2s]"></span>
-                    <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:0.4s]"></span>
+                  <div className="flex-1 bg-[#262626] border border-[#333333] rounded-2xl px-4 py-3 max-w-md shadow-sm">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce"></span>
+                        <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.2s]"></span>
+                        <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.4s]"></span>
+                      </div>
+                      <span className="text-xs font-medium text-gray-200">
+                        {loadingTime < 3
+                          ? "Searching portfolio & retrieving property details..."
+                          : "Consulting AI Real Estate Advisor..."}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-amber-400/90 flex items-center gap-1.5 mt-1">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                      <span>First response may take a moment while the cloud server wakes up.</span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -122,9 +150,6 @@ export default function ChatWindow({ messages, isLoading, onSendMessage }) {
             <ArrowUp className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
-        <div className="text-center text-[11px] text-gray-500 mt-2">
-          DarGlobal AI Advisor can make mistakes. Verify important property details with official listings.
-        </div>
       </div>
     </div>
   );

@@ -107,14 +107,25 @@
         <div id="messagesList" class="space-y-6"></div>
 
         <!-- Typing Indicator -->
-        <div id="typingIndicator" class="hidden flex gap-3.5 items-start py-4">
-          <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shrink-0 mt-0.5">
+        <div id="typingIndicator" class="hidden flex gap-4 items-start py-4">
+          <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8C6D23] flex items-center justify-center font-bold text-black text-xs shrink-0 mt-0.5 shadow-sm animate-pulse">
             D
           </div>
-          <div class="flex items-center gap-1.5 pt-1.5">
-            <span class="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></span>
-            <span class="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:0.2s]"></span>
-            <span class="w-2 h-2 rounded-full bg-gray-400 animate-bounce [animation-delay:0.4s]"></span>
+          <div class="flex-1 bg-[#262626] border border-[#333333] rounded-2xl px-4 py-3 max-w-md shadow-sm">
+            <div class="flex items-center gap-2 mb-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce"></span>
+                <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.2s]"></span>
+                <span class="w-2 h-2 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:0.4s]"></span>
+              </div>
+              <span class="text-xs font-medium text-gray-200">
+                Searching portfolio & consulting AI advisor...
+              </span>
+            </div>
+            <div class="text-[11px] text-amber-400/90 flex items-center gap-1.5 mt-1">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+              <span>First response may take a moment while the cloud server wakes up.</span>
+            </div>
           </div>
         </div>
 
@@ -139,9 +150,6 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
         </button>
       </form>
-      <div class="text-center text-[11px] text-gray-500 mt-2">
-        DarGlobal AI Advisor can make mistakes. Verify important property details with official listings.
-      </div>
     </div>
 
   </main>
