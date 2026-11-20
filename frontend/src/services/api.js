@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const RAW_API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = RAW_API_BASE.replace(/\/+$/, '');
 
 export async function sendChatMessage(query, options = {}) {
   const { top_k = 4, model, api_key } = options;
