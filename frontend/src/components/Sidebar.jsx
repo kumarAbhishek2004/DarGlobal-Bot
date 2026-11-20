@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, MessageSquare, Trash2, PanelLeftClose, Sparkles } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, PanelLeftClose } from 'lucide-react';
 
 export default function Sidebar({
   isOpen,
@@ -68,7 +68,6 @@ export default function Sidebar({
 
           {threads.length === 0 ? (
             <div className="px-3 py-6 text-center text-xs text-gray-500">
-              <Sparkles className="w-5 h-5 mx-auto mb-2 text-gray-600 opacity-60" />
               <span>No past conversations yet. Start a new chat!</span>
             </div>
           ) : (
