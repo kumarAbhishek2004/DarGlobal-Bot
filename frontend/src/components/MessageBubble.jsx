@@ -1,12 +1,33 @@
 import React, { useState } from 'react';
 import { Copy, Check, ExternalLink } from 'lucide-react';
 
+function formatHumanContent(content) {
+  if (!content) return '';
+  // 1. Strip thinking process block if any
+  let cleaned = content.replace(
+    /(?is)^.*?(?:here(?:'s|\s+is)\s+(?:a\s+)?thinking\s+process|thinking\s+process|chain\s+of\s+thought):?[\s\S]*?(?=\n\n[A-Z0-9#•\*\-][^\n]*\n\n|\n\n(?=[A-Z][a-z]+ (?:by|is|in|offers|features|welcomes))|\Z)/i,
+    ''
+  );
+  if (!cleaned || cleaned.trim().length < 20) {
+    cleaned = content;
+  }
+
+  // 2. Remove AI asterisks and format clean human bullets
+  cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '$1');
+  cleaned = cleaned.replace(/\*([^\*\n]+)\*/g, '$1');
+  cleaned = cleaned.replace(/^\s*[\*\-]\s+/gm, '• ');
+  cleaned = cleaned.replace(/\*/g, '');
+
+  return cleaned.trim();
+}
+
 export default function MessageBubble({ message }) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
+  const displayContent = isUser ? message.content : formatHumanContent(message.content);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
+    navigator.clipboard.writeText(displayContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -31,7 +52,7 @@ export default function MessageBubble({ message }) {
       <div className="flex-1 overflow-hidden">
         {/* Assistant Markdown Content */}
         <div className="chat-prose text-sm text-[#ECECEC] leading-relaxed whitespace-pre-wrap">
-          {message.content}
+          {displayContent}
         </div>
 
         {/* Clean Source Pills */}

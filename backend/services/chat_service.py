@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 from backend.retrieval.hybrid import HybridRetriever
 from backend.llm.openrouter import OpenRouterClient
 from backend.llm.prompts import SYSTEM_PROMPT, build_rag_prompt
+from backend.scraper.cleaner import clean_human_response
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +66,14 @@ class ChatService:
             return {
                 "query": user_query,
                 "answer": (
-                    "Hello! Welcome to the **DarGlobal & Wasalt AI Real Estate Advisor**.\n\n"
-                    "I am your dedicated concierge for exploring our verified real estate portfolio:\n\n"
-                    "• **DarGlobal International Luxury:** Ultra-prime branded residences across Dubai, Spain, Oman, Qatar, and London in partnership with prestigious marques like **Pagani**, **Automobili Lamborghini**, **Elie Saab**, and **The Trump Organization**.\n"
-                    "• **Wasalt Saudi Marketplace:** Verified villas, apartments, and land for sale and rent across Riyadh, Jeddah, Dammam, and major Saudi hubs.\n\n"
-                    "**How may I assist you today?** You can ask about:\n"
-                    "- *\"Tell me about Pagani DaVinci Tower in Dubai.\"*\n"
-                    "- *\"What Lamborghini villas are available in Spain?\"*\n"
-                    "- *\"What residential properties are listed in Riyadh on Wasalt?\"*"
+                    "Hello! Welcome to the DarGlobal & Wasalt Real Estate Concierge.\n\n"
+                    "I am your dedicated advisor for exploring our verified real estate portfolio:\n\n"
+                    "• DarGlobal International Luxury: Ultra-prime branded residences across Dubai, Spain, Oman, Qatar, and London in partnership with prestigious marques including Pagani, Automobili Lamborghini, Elie Saab, and The Trump Organization.\n\n"
+                    "• Wasalt Saudi Marketplace: Verified villas, apartments, and land for sale and rent across Riyadh, Jeddah, Dammam, and major Saudi hubs.\n\n"
+                    "How may I assist you today? You can ask about:\n"
+                    "• Tierra Viva luxury Lamborghini villas in Spain\n"
+                    "• Pagani DaVinci Tower in Dubai\n"
+                    "• Verified residential villas in Riyadh on Wasalt"
                 ),
                 "model": "concierge/instant",
                 "sources": [],
@@ -93,7 +94,9 @@ class ChatService:
         # 3. Generate Answer with OpenRouter (with automatic model fallback)
         llm_res = self.llm_client.generate(messages)
         latency = round((time.time() - start_time) * 1000, 2)
-        answer_text = str(llm_res.get("content") or "").strip()
+        raw_answer = str(llm_res.get("content") or "").strip()
+        # Parse and humanize output: strip AI thinking steps, asterisks, and robotic artifacts
+        answer_text = clean_human_response(raw_answer)
         if not answer_text:
             answer_text = "I have reviewed the property context for your query. For full unit availability and private viewings, please contact DarGlobal or Wasalt directly."
 
