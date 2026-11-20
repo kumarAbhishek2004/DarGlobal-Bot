@@ -5,7 +5,7 @@ function formatHumanContent(content) {
   if (!content) return '';
   // 1. Strip thinking process block if any
   let cleaned = content.replace(
-    /(?is)^.*?(?:here(?:'s|\s+is)\s+(?:a\s+)?thinking\s+process|thinking\s+process|chain\s+of\s+thought):?[\s\S]*?(?=\n\n[A-Z0-9#•\*\-][^\n]*\n\n|\n\n(?=[A-Z][a-z]+ (?:by|is|in|offers|features|welcomes))|\Z)/i,
+    /^[\s\S]*?(?:here(?:'s|\s+is)\s+(?:a\s+)?thinking\s+process|thinking\s+process|chain\s+of\s+thought):?[\s\S]*?(?=\n\n[A-Z0-9#•\*\-][^\n]*\n\n|\n\n(?=[A-Z][a-z]+ (?:by|is|in|offers|features|welcomes))|$)/i,
     ''
   );
   if (!cleaned || cleaned.trim().length < 20) {
