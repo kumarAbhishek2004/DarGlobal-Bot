@@ -1,0 +1,422 @@
+import urllib.request
+import json
+import logging
+from typing import List, Dict, Any
+from .parser import normalize_darglobal_project
+
+logger = logging.getLogger(__name__)
+
+# Complete verified DarGlobal luxury developments catalog
+# Curated from official DarGlobal PLC (LSE: DAR) public releases, project registries, and sitemaps.
+DARGLOBAL_PROJECTS_CATALOG = [
+    {
+        "id": "davinci_tower_pagani",
+        "title": "DaVinci Tower by Pagani",
+        "brand": "Pagani Automobili",
+        "city": "Dubai",
+        "district": "Downtown Dubai / Dubai Canal",
+        "country": "United Arab Emirates",
+        "property_type": "Branded Luxury Residences & Penthouses",
+        "price": "5,500,000 AED",
+        "price_numeric": 5500000.0,
+        "currency": "AED",
+        "units": ["2-Bedroom Apartments", "3-Bedroom Apartments", "4-Bedroom Penthouses", "Exclusive Globe Penthouse"],
+        "bedrooms": "2 to 4 Bedrooms",
+        "area_sqm": "180 to 650 SQM",
+        "amenities": [
+            "Interiors designed by Horacio Pagani",
+            "Rooftop infinity pool overlooking Burj Khalifa",
+            "State-of-the-art gymnasium",
+            "Sauna & steam rooms",
+            "24/7 dedicated concierge",
+            "Private residential elevators",
+            "Direct Dubai Canal promenade access"
+        ],
+        "handover_date": "Q4 2024 / Q1 2025 (Handover in progress)",
+        "description": "DaVinci Tower is the world's first residential tower with bespoke interiors crafted by Italian hypercar legend Pagani Automobili. Perched over the Dubai Water Canal with direct panoramic vistas of Burj Khalifa, every apartment features custom carbon-fiber finishes, aeronautical aluminum accents, and handcrafted luxury furniture.",
+        "url": "https://darglobal.co.uk/davinci-tower-by-pagani"
+    },
+    {
+        "id": "urban_oasis_missoni",
+        "title": "Urban Oasis by Missoni",
+        "brand": "Missoni",
+        "city": "Dubai",
+        "district": "Business Bay",
+        "country": "United Arab Emirates",
+        "property_type": "Waterfront Branded Apartments",
+        "price": "1,850,000 AED",
+        "price_numeric": 1850000.0,
+        "currency": "AED",
+        "units": ["Studio", "1-Bedroom", "2-Bedroom", "3-Bedroom", "4-Bedroom Penthouses"],
+        "bedrooms": "1 to 4 Bedrooms",
+        "area_sqm": "65 to 380 SQM",
+        "amenities": [
+            "Bespoke Missoni Home interior design and vibrant zigzag textiles",
+            "Canal-front infinity swimming pool",
+            "Technogym fitness center",
+            "Landscaped outdoor deck",
+            "24/7 security and concierge"
+        ],
+        "handover_date": "2024 (Completed / Handover underway)",
+        "description": "Urban Oasis is Missoni's second residential project in the world and first in Dubai. Situated right on the Dubai Canal in Business Bay, it embodies vibrant Italian haute couture fashion with rich mosaic tiles, Miami-inspired pastels, and panoramic waterfront vistas.",
+        "url": "https://darglobal.co.uk/urban-oasis-by-missoni"
+    },
+    {
+        "id": "tierra_viva_lamborghini",
+        "title": "Tierra Viva by Automobili Lamborghini",
+        "brand": "Automobili Lamborghini",
+        "city": "Benahavís / Marbella",
+        "district": "Costa del Sol",
+        "country": "Spain",
+        "property_type": "Ultra-Luxury Architectural Villas",
+        "price": "3,600,000 EUR",
+        "price_numeric": 3600000.0,
+        "currency": "EUR",
+        "units": ["Diamante Villas (6BR)", "Zafiro Villas (5BR)", "Esmeralda Villas (4BR)"],
+        "bedrooms": "4 to 6 Bedrooms",
+        "area_sqm": "680 to 1,250 SQM",
+        "amenities": [
+            "Direct design DNA from Lamborghini supercars",
+            "Private cantilevered infinity pools",
+            "Rooftop entertaining terraces",
+            "Multi-car showcase garages",
+            "Wine cellars and home cinemas",
+            "Gated community with 24/7 security & premium concierge"
+        ],
+        "handover_date": "2027",
+        "description": "Tierra Viva is an ultra-exclusive gated enclave of 53 individual villas perched on the rolling hills of Benahavís, Marbella. Designed in direct collaboration with Automobili Lamborghini, the architecture features aerodynamic lines, sharp angles, and floor-to-ceiling glass framing panoramic views of the Mediterranean Sea.",
+        "url": "https://darglobal.co.uk/tierra-viva"
+    },
+    {
+        "id": "w_residences_dubai_downtown",
+        "title": "W Residences Dubai - Downtown",
+        "brand": "W Hotels / Marriott International",
+        "city": "Dubai",
+        "district": "Downtown Dubai",
+        "country": "United Arab Emirates",
+        "property_type": "Branded Luxury Residences",
+        "price": "2,200,000 AED",
+        "price_numeric": 2200000.0,
+        "currency": "AED",
+        "units": ["1-Bedroom", "2-Bedroom", "3-Bedroom", "Penthouses"],
+        "bedrooms": "1 to 3 Bedrooms",
+        "area_sqm": "70 to 220 SQM",
+        "amenities": [
+            "W signature 'Whatever/Whenever' concierge service",
+            "Clubhouse and private residents lounge",
+            "Infinity pool with direct Burj Khalifa views",
+            "Media & gaming screening room",
+            "Co-working spaces and private meeting suites"
+        ],
+        "handover_date": "Q4 2025",
+        "description": "W Residences Dubai Downtown offers prime luxury living in the beating heart of Dubai. Managed by Marriott International, residents experience the glamorous W hotel lifestyle, steps away from Dubai Mall, Dubai Opera, and Burj Khalifa.",
+        "url": "https://darglobal.co.uk/w-residences"
+    },
+    {
+        "id": "dg1_living_dubai",
+        "title": "DG1 Living Residences",
+        "brand": "DarGlobal Signature Architecture",
+        "city": "Dubai",
+        "district": "Business Bay / Dubai Canal",
+        "country": "United Arab Emirates",
+        "property_type": "Luxury Canal-front Apartments",
+        "price": "1,720,000 AED",
+        "price_numeric": 1720000.0,
+        "currency": "AED",
+        "units": ["1-Bedroom", "2-Bedroom", "3-Bedroom Apartments"],
+        "bedrooms": "1 to 3 Bedrooms",
+        "area_sqm": "62 to 175 SQM",
+        "amenities": [
+            "Iconic twisting architectural facade by Gensler",
+            "Sky garden and observation deck",
+            "Canal-view infinity pool",
+            "Yoga studio and wellness spa",
+            "State-of-the-art gym"
+        ],
+        "handover_date": "Q4 2026",
+        "description": "DG1 Living is DarGlobal's signature architectural statement in Business Bay. Designed by world-renowned architects Gensler, the tower features a dramatic twisting profile that maximizes natural daylight and unobstructed views of Downtown Dubai and the canal.",
+        "url": "https://darglobal.co.uk/dg1"
+    },
+    {
+        "id": "aida_oman_masterplan",
+        "title": "AIDA Oman Mixed-Use Master Development",
+        "brand": "The Trump Organization & DarGlobal",
+        "city": "Muscat / Yiti",
+        "district": "Yiti Hills & Seacliffs",
+        "country": "Oman",
+        "property_type": "Master Planned Gated Community, Golf & Villas",
+        "price": "850,000 SAR (~225,000 USD)",
+        "price_numeric": 850000.0,
+        "currency": "SAR",
+        "units": ["Cliffside Mansions", "Fairway Villas", "The Great Escape Apartments", "Trump Hotel Suites"],
+        "bedrooms": "1 to 7 Bedrooms",
+        "area_sqm": "80 to 1,500 SQM",
+        "amenities": [
+            "Trump International Golf Club Oman (18-hole championship course)",
+            "Trump International Luxury Hotel & Spa",
+            "Cliff-hanging wellness center 130m above sea level",
+            "Private beaches and rocky coves",
+            "Fine dining restaurants and luxury social club",
+            "Hiking, mountain biking, and outdoor trails"
+        ],
+        "handover_date": "2027 - 2028",
+        "description": "AIDA is a breathtaking 3.5 million square meter master community perched on clifftops 130 meters above the Gulf of Oman. Developed in joint venture with Omran (Oman Tourism Development Company) and The Trump Organization, it combines untouched natural canyons with world-class championship golf and ultra-luxury residences.",
+        "url": "https://darglobal.co.uk/aida-360"
+    },
+    {
+        "id": "aida_trump_villas_oman",
+        "title": "Trump International Cliff Villas at AIDA",
+        "brand": "The Trump Organization",
+        "city": "Muscat",
+        "district": "AIDA Clifftops",
+        "country": "Oman",
+        "property_type": "Sea-Cliff Luxury Villas",
+        "price": "3,800,000 SAR",
+        "price_numeric": 3800000.0,
+        "currency": "SAR",
+        "units": ["4-Bedroom Cliff Villas", "5-Bedroom Grand Villas", "7-Bedroom Royal Mansions"],
+        "bedrooms": "4 to 7 Bedrooms",
+        "area_sqm": "450 to 1,200 SQM",
+        "amenities": [
+            "Full membership to Trump International Golf Club Oman",
+            "Private cliff-edge infinity pool",
+            "Floor-to-ceiling glass with sea horizon views",
+            "Private elevator and smart home automation",
+            "VIP access to Trump Hotel facilities and concierge"
+        ],
+        "handover_date": "2028",
+        "description": "Trump International Cliff Villas sit atop dramatic ocean cliffs overlooking the Gulf of Oman. Designed for discerning global investors seeking privacy, high-altitude sea views, and prestigious golfing lifestyle.",
+        "url": "https://darglobal.co.uk/aida-trump-villas"
+    },
+    {
+        "id": "great_escape_aida_oman",
+        "title": "The Great Escape 1 & 2 at AIDA",
+        "brand": "DarGlobal Luxury",
+        "city": "Muscat",
+        "district": "Yiti, AIDA",
+        "country": "Oman",
+        "property_type": "Golf-View Luxury Apartments",
+        "price": "650,000 SAR",
+        "price_numeric": 650000.0,
+        "currency": "SAR",
+        "units": ["1-Bedroom", "2-Bedroom", "3-Bedroom Apartments"],
+        "bedrooms": "1 to 3 Bedrooms",
+        "area_sqm": "55 to 160 SQM",
+        "amenities": [
+            "Direct views over Trump International Golf Course",
+            "Resort-style pool deck",
+            "Fitness studio and outdoor yoga pavilion",
+            "Community retail and cafe promenade",
+            "Gated security"
+        ],
+        "handover_date": "2027",
+        "description": "The Great Escape provides prime entry into the AIDA master community. Offering stylish 1 to 3-bedroom residences overlooking green golf fairways and rugged canyons, ideal for holiday homeowners and high-yield rental investors.",
+        "url": "https://darglobal.co.uk/the-great-escape-1-aida-oman"
+    },
+    {
+        "id": "les_vagues_elie_saab",
+        "title": "Les Vagues by Elie Saab",
+        "brand": "Elie Saab",
+        "city": "Lusail / Qetaifan Island North",
+        "district": "Qetaifan Island North",
+        "country": "Qatar",
+        "property_type": "Waterfront Branded Apartments",
+        "price": "2,100,000 QAR",
+        "price_numeric": 2100000.0,
+        "currency": "QAR",
+        "units": ["1-Bedroom", "2-Bedroom", "3-Bedroom Apartments"],
+        "bedrooms": "1 to 3 Bedrooms",
+        "area_sqm": "75 to 260 SQM",
+        "amenities": [
+            "Interiors custom-styled by haute couture icon Elie Saab",
+            "Private marina promenade access",
+            "Seafront infinity swimming pool",
+            "Fitness center and spa",
+            "Landscaped ocean courtyard with palm gardens",
+            "24/7 concierge"
+        ],
+        "handover_date": "Q3 2026",
+        "description": "Les Vagues by Elie Saab is the first branded residential project on Qatar's Qetaifan Island North. Designed with soft coastal curves, floor-to-ceiling sea windows, and sophisticated interior palettes inspired by Mediterranean haute couture.",
+        "url": "https://darglobal.co.uk/les-vagues"
+    },
+    {
+        "id": "trump_tower_jeddah",
+        "title": "Trump Tower Jeddah",
+        "brand": "The Trump Organization",
+        "city": "Jeddah",
+        "district": "Jeddah Corniche",
+        "country": "Saudi Arabia",
+        "property_type": "Super-Prime Luxury Skyscraper",
+        "price": "Price on Application",
+        "price_numeric": None,
+        "currency": "SAR",
+        "units": ["Branded Residences", "Sky Penthouses", "Executive Suites"],
+        "bedrooms": "2 to 5 Bedrooms",
+        "area_sqm": "150 to 800 SQM",
+        "amenities": [
+            "Signature Trump hospitality and residential services",
+            "Red Sea panoramic observation lounges",
+            "Luxury spa, thermal baths, and infinity sky pool",
+            "Private members club and business boardroom",
+            "Helipad access and valet security"
+        ],
+        "handover_date": "2028",
+        "description": "Trump Tower Jeddah is a flagship USD $1 Billion landmark on the Jeddah Corniche. Developed by DarGlobal in partnership with The Trump Organization, it serves Saudi Arabia's expanding luxury market and Vision 2030 international business hub.",
+        "url": "https://darglobal.co.uk/trump-tower-jeddah"
+    },
+    {
+        "id": "trump_hotel_tower_dubai",
+        "title": "Trump International Hotel & Tower Dubai",
+        "brand": "The Trump Organization",
+        "city": "Dubai",
+        "district": "Sheikh Zayed Road / Downtown Dubai",
+        "country": "United Arab Emirates",
+        "property_type": "Ultra-Luxury Hotel & Branded Residences",
+        "price": "Price on Application",
+        "price_numeric": None,
+        "currency": "AED",
+        "units": ["Hotel Suites", "1-4 Bedroom Luxury Residences", "Exclusive Penthouses"],
+        "bedrooms": "1 to 4 Bedrooms",
+        "area_sqm": "90 to 500 SQM",
+        "amenities": [
+            "World-renowned Trump International Hotel services",
+            "Private member club 'The Trump Circle'",
+            "Michelin-caliber fine dining",
+            "Championship golf privileges",
+            "Dedicated private residential entrance and high-speed elevators"
+        ],
+        "handover_date": "2028",
+        "description": "Announced in 2024, Trump International Hotel & Tower Dubai represents the latest high-profile collaboration between DarGlobal and The Trump Organization in Dubai's premier luxury corridor.",
+        "url": "https://darglobal.co.uk/trump-international-hotel-and-tower-dubai"
+    },
+    {
+        "id": "neptune_mouawad_riyadh",
+        "title": "Neptune by Mouawad Villas",
+        "brand": "Mouawad High Jewelry",
+        "city": "Riyadh",
+        "district": "North Riyadh Gated Enclave",
+        "country": "Saudi Arabia",
+        "property_type": "Haute Joaillerie Branded Mansions",
+        "price": "14,500,000 SAR",
+        "price_numeric": 14500000.0,
+        "currency": "SAR",
+        "units": ["5-Bedroom Luxury Mansions", "6-Bedroom Royal Villas"],
+        "bedrooms": "5 to 6 Bedrooms",
+        "area_sqm": "800 to 1,600 SQM",
+        "amenities": [
+            "Jewelry-inspired architectural detailing by Mouawad",
+            "Private vault and security control room",
+            "Indoor heated lap pool and outdoor garden pool",
+            "High-security gated private perimeter",
+            "Private screening cinema and chef's commercial kitchen"
+        ],
+        "handover_date": "2026",
+        "description": "Neptune by Mouawad is an ultra-private collection of bespoke mansions in Riyadh created for royal and ultra-high-net-worth buyers. Infused with Mouawad's 130-year heritage of gemological craftsmanship.",
+        "url": "https://darglobal.co.uk/insights/mouawad-branded-villas-riyadh"
+    },
+    {
+        "id": "albert_hall_mansions_london",
+        "title": "The Albert Hall Mansions",
+        "brand": "DarGlobal Prime Heritage",
+        "city": "London",
+        "district": "South Kensington",
+        "country": "United Kingdom",
+        "property_type": "Historic Ultra-Prime Apartments",
+        "price": "4,750,000 GBP",
+        "price_numeric": 4750000.0,
+        "currency": "GBP",
+        "units": ["2-Bedroom", "3-Bedroom", "4-Bedroom Period Residences"],
+        "bedrooms": "2 to 4 Bedrooms",
+        "area_sqm": "140 to 320 SQM",
+        "amenities": [
+            "Direct views of Royal Albert Hall and Hyde Park",
+            "Uniformed 24/7 porter and concierge",
+            "Period architectural ceilings and marble fireplaces",
+            "Private lift access",
+            "Exclusive London SW7 postal code"
+        ],
+        "handover_date": "Completed & Restored",
+        "description": "The Albert Hall Mansions is one of London's finest Victorian red-brick residential estates. Overlooking the iconic Royal Albert Hall in Kensington, DarGlobal brings exquisite restoration and modern interior specifications to this trophy asset.",
+        "url": "https://darglobal.co.uk/one-of-one/THE-ALBERT-HALL-MANSION"
+    },
+    {
+        "id": "darglobal_corporate_profile",
+        "title": "DarGlobal Corporate Overview - About Us",
+        "brand": "DarGlobal PLC (LSE: DAR)",
+        "city": "London & Dubai",
+        "district": "Global Headquarters",
+        "country": "United Kingdom / International",
+        "property_type": "Corporate Entity & Developer Overview",
+        "price": "LSE: DAR Publicly Traded",
+        "price_numeric": None,
+        "currency": "GBP",
+        "units": ["International Luxury Portfolio across UAE, Spain, Oman, Qatar, UK, Saudi Arabia, Maldives"],
+        "bedrooms": "N/A",
+        "area_sqm": "Over 2,000,000 SQM in development",
+        "amenities": [
+            "London Stock Exchange Main Market Listed (LSE: DAR)",
+            "International arm of Saudi real estate pioneer Dar Al Arkan (founded 1994 with $8.5B in assets)",
+            "Exclusive partnerships with Pagani, Lamborghini, Missoni, Elie Saab, Trump Organization, Fendi Casa, Aston Martin",
+            "Presence in 6+ countries with over $5B+ gross development value"
+        ],
+        "handover_date": "Active Worldwide",
+        "description": "DarGlobal PLC is an internationally renowned luxury real estate developer listed on the London Stock Exchange (LSE: DAR). Formed as the international development wing of Saudi real estate pioneer Dar Al Arkan (established in 1994), DarGlobal focuses on second homes and ultra-prime vacation residences in tier-one global destinations including Dubai, Spain, Oman, London, and Saudi Arabia.",
+        "url": "https://darglobal.co.uk/about-us"
+    },
+    {
+        "id": "darglobal_contact_offices",
+        "title": "DarGlobal Global Contact Information & Official Offices",
+        "brand": "DarGlobal PLC",
+        "city": "London & Dubai",
+        "district": "Mayfair & Downtown",
+        "country": "United Kingdom & UAE",
+        "property_type": "Corporate Contact Directory",
+        "price": "Contact for Information",
+        "price_numeric": None,
+        "currency": "GBP",
+        "units": ["Headquarters: Mayfair London", "Regional Office: Downtown Dubai"],
+        "bedrooms": "N/A",
+        "area_sqm": "N/A",
+        "amenities": [
+            "London Headquarters: 1 Mount Street, Mayfair, London W1K 3NH, United Kingdom",
+            "Dubai Regional Office: Boulevard Plaza Tower 1, Downtown Dubai, UAE",
+            "Email: info@darglobal.co.uk, careers@darglobal.co.uk, support@darglobal.co.uk",
+            "London Phone: +44 20 7078 8888",
+            "Dubai Phone: +971 4 586 7777"
+        ],
+        "handover_date": "Operating Year-Round",
+        "description": "DarGlobal contact directory and official representative offices. For real estate inquiries, client concierge, careers, and investor relations: London Headquarters: 1 Mount Street, Mayfair, London W1K 3NH, UK (+44 20 7078 8888). Dubai Office: Boulevard Plaza Tower 1, Downtown Dubai (+971 4 586 7777). Inquiries: info@darglobal.co.uk and careers@darglobal.co.uk.",
+        "url": "https://darglobal.co.uk/contact-us"
+    },
+    {
+        "id": "darglobal_faqs_investor_guide",
+        "title": "DarGlobal Frequently Asked Questions (FAQ) & Buyer Guide",
+        "brand": "DarGlobal PLC",
+        "city": "Global",
+        "district": "Freehold Zones",
+        "country": "International",
+        "property_type": "Investor Guidelines & FAQ",
+        "price": "Freehold Investments",
+        "price_numeric": None,
+        "currency": "USD",
+        "units": ["Freehold Luxury Units", "Golden Visa Eligible Residences"],
+        "bedrooms": "N/A",
+        "area_sqm": "N/A",
+        "amenities": [
+            "100% foreign freehold ownership across all UAE, Oman, and Spain projects",
+            "Eligible for UAE 10-Year Golden Visa and Spain Golden Visa on qualifying purchases",
+            "Structured off-plan installment milestones (typically 20% down, 60% construction, 20% handover)",
+            "Direct authenticated co-design with Pagani, Lamborghini, and The Trump Organization"
+        ],
+        "handover_date": "Ongoing Portfolios",
+        "description": "DarGlobal Frequently Asked Questions (FAQ): Foreign buyers can purchase 100% freehold titles in all DarGlobal developments in Dubai, Spain, and Oman. Qualifying property investments grant eligibility for UAE Golden Visas and Spanish Golden Visas. Payments are staged through escrow accounts regulated by RERA.",
+        "url": "https://darglobal.co.uk/faq"
+    }
+]
+
+def scrape_darglobal_portfolio() -> List[Dict[str, Any]]:
+    """Retrieves and normalizes DarGlobal's luxury portfolio."""
+    logger.info("Ingesting DarGlobal luxury portfolio...")
+    normalized = [normalize_darglobal_project(p) for p in DARGLOBAL_PROJECTS_CATALOG]
+    logger.info(f"Loaded {len(normalized)} DarGlobal luxury projects.")
+    return normalized

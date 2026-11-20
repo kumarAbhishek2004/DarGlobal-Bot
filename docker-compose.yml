@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  darglobal-ai-assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: darglobal_ai_assistant
+    ports:
+      - "7860:7860"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-baidu/ernie-5.5-flash-preview:free}
+      - HOST=0.0.0.0
+      - PORT=7860
+    env_file:
+      - .env
+    restart: unless-stopped
