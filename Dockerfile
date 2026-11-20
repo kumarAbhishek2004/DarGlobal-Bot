@@ -28,11 +28,6 @@ COPY backend ./backend
 COPY frontend/dist ./frontend/dist
 COPY .env.example ./.env.example
 
-# Pre-download and cache embedding model weights inside the container image
-# This ensures zero cold-start delay during live cloud deployment
-RUN mkdir -p /app/.cache/huggingface && \
-    python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-en-v1.5')"
-
 # Create non-root user for security best practices
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app

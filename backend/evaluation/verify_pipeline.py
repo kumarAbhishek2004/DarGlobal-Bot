@@ -10,7 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Ensure project root is in python path
+import sys
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 DATA_DIR = ROOT_DIR / "backend" / "data"
 
 def run_full_verification():

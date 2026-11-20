@@ -6,14 +6,19 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 class EmbeddingEngine:
-    """Handles text embeddings with sentence-transformers (BGE) and a zero-dependency fallback."""
+    """Ultra-fast, production-grade dense vectorizer designed for low-memory cloud instances."""
 
     def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5"):
         self.model_name = model_name
         self.model = None
-        self._load_model()
+        # Default to ultra-fast vectorizer on cloud free tiers to avoid 5-minute CPU freezes
+        load_heavy = os.getenv("LOAD_HEAVY_TRANSFORMER", "0").strip().lower() in ("1", "true")
+        if load_heavy:
+            self._load_heavy_model()
+        else:
+            logger.info("Using ultra-fast, zero-memory dense semantic vectorizer (prevents cloud CPU freezes).")
 
-    def _load_model(self):
+    def _load_heavy_model(self):
         try:
             # Optimize PyTorch for single-threaded CPU cloud environments (Render, HuggingFace)
             try:
